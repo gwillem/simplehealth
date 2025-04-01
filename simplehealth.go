@@ -40,7 +40,7 @@ func (s *SimpleHealth) AddCheck(check func() error) {
 	s.checks = append(s.checks, check)
 }
 
-func (s *SimpleHealth) SetChecks(checks []func() error) {
+func (s *SimpleHealth) SetChecks(checks ...func() error) {
 	s.checks = checks
 }
 
