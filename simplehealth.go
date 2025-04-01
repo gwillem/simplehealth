@@ -47,7 +47,7 @@ func (s *SimpleHealth) SetChecks(checks ...func() error) {
 func (s *SimpleHealth) Handler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	errs := s.Check()
+	errs := s.Run()
 	if len(errs) > 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		errorMessages := make([]string, len(errs))
@@ -70,7 +70,7 @@ func (s *SimpleHealth) Handler(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
-func (s *SimpleHealth) Check() []error {
+func (s *SimpleHealth) Run() []error {
 	var errs []error
 	errCh := make(chan error, len(s.checks))
 
@@ -120,6 +120,32 @@ func CheckOpenFiles() error {
 		softLimit := rlimits[syscall.RLIMIT_NOFILE].Soft
 		if softLimit <= 0 {
 			// Skip processes with no file limits
+			continue
+		}
+
+		if softLimit < 1024 && user == "root" {
+			/*
+				dodge an edge case where sshd sometimes has a limit of 1: cat /proc/$(pgrep sshd -n)/limits
+
+				Data Limit                     Soft Limit           Hard Limit           Units
+					Max cpu time              unlimited            unlimited            seconds
+					Max file size             0                    0                    bytes
+					Max data size             unlimited            unlimited            bytes
+					Max stack size            8388608              unlimited            bytes
+					Max core file size        0                    unlimited            bytes
+					Max resident set          unlimited            unlimited            bytes
+					Max processes             0                    0                    processes
+					Max open files            1                    1                    files
+					Max locked memory         8388608              8388608              bytes
+					Max address space         unlimited            unlimited            bytes
+					Max file locks            unlimited            unlimited            locks
+					Max pending signals       62319                62319                signals
+					Max msgqueue size         819200               819200               bytes
+					Max nice priority         0                    0
+					Max realtime priority     0                    0
+					Max realtime timeout      unlimited            unlimited            us
+			*/
+
 			continue
 		}
 
