@@ -27,9 +27,9 @@ type SimpleHealth struct {
 }
 
 var defaultChecks = []func() error{
-	checkOpenFiles,
-	checkDisk,
-	checkLoad,
+	CheckOpenFiles,
+	CheckDisk,
+	CheckLoad,
 }
 
 func NewSimpleHealth() *SimpleHealth {
@@ -38,6 +38,10 @@ func NewSimpleHealth() *SimpleHealth {
 
 func (s *SimpleHealth) AddCheck(check func() error) {
 	s.checks = append(s.checks, check)
+}
+
+func (s *SimpleHealth) SetChecks(checks []func() error) {
+	s.checks = checks
 }
 
 func (s *SimpleHealth) Handler(w http.ResponseWriter, _ *http.Request) {
@@ -85,7 +89,7 @@ func (s *SimpleHealth) Check() []error {
 	return errs
 }
 
-func checkLoad() error {
+func CheckLoad() error {
 	avg, err := load.Avg()
 	if err != nil {
 		return err
@@ -97,7 +101,7 @@ func checkLoad() error {
 	return nil
 }
 
-func checkOpenFiles() error {
+func CheckOpenFiles() error {
 	processes, err := process.Processes()
 	if err != nil {
 		return err
@@ -132,7 +136,7 @@ func checkOpenFiles() error {
 	return nil
 }
 
-func checkDisk() error {
+func CheckDisk() error {
 	parts, err := disk.Partitions(false)
 	if err != nil {
 		return err
