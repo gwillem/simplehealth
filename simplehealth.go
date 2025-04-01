@@ -123,7 +123,7 @@ func CheckOpenFiles() error {
 			continue
 		}
 
-		if softLimit < 1024 && user == "root" {
+		if softLimit < 1024 && (user == "root" || user == "sshd") {
 			/*
 				dodge an edge case where sshd sometimes has a limit of 1: cat /proc/$(pgrep sshd -n)/limits
 
@@ -151,6 +151,11 @@ func CheckOpenFiles() error {
 
 		cur, err := p.NumFDs()
 		if err != nil || cur == 0 {
+			continue
+		}
+
+		if cur > int32(softLimit) {
+			// cannot happen?!
 			continue
 		}
 
